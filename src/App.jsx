@@ -200,23 +200,7 @@ const validateSyntheticData = (data) => {
   }
 
   const adjacency = buildAdjacency(data.links);
-
-  const canReach = (start, target) => {
-    const seen = new Set();
-    const queue = [start];
-    while (queue.length) {
-      const current = queue.shift();
-      if (current === target) return true;
-      if (seen.has(current)) continue;
-      seen.add(current);
-      adjacency.get(current)?.forEach((neighbor) => {
-        if (!seen.has(neighbor)) queue.push(neighbor);
-      });
-    }
-    return false;
-  };
-
-  const sharedIp = ipNodes.find((ip) => events.every((evt) => canReach(evt.id, ip.id)));
+  const sharedIp = ipNodes.find((ip) => events.every((evt) => adjacency.get(evt.id)?.has(ip.id)));
 
   if (!sharedIp) {
     return {

@@ -1,14 +1,14 @@
 :root {
-  --bg: #f3f6fb;
-  --panel: #ffffff;
-  --card: #fdfefe;
-  --text: #0f172a;
-  --muted: #4a5568;
-  --primary: #2d4ed7;
-  --accent: #0cbea6;
-  --border: #d7deea;
-  --pill: #eef3fb;
-  --shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
+  --bg: #0f172a;
+  --panel: #0b1020;
+  --card: #0f192d;
+  --text: #e5e7ef;
+  --muted: #9aa4b5;
+  --primary: #375dfb;
+  --accent: #00c2a8;
+  --border: #1f2a44;
+  --pill: #131c32;
+  --shadow: 0 18px 40px rgba(9, 14, 30, 0.6);
 }
 
 * {
@@ -18,8 +18,8 @@
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: radial-gradient(circle at 20% 20%, rgba(45, 78, 215, 0.12), transparent 32%),
-    radial-gradient(circle at 80% 0%, rgba(12, 190, 166, 0.12), transparent 30%),
+  background: radial-gradient(circle at 20% 20%, rgba(55, 93, 251, 0.12), transparent 30%),
+    radial-gradient(circle at 80% 0%, rgba(0, 194, 168, 0.12), transparent 28%),
     var(--bg);
   color: var(--text);
 }
@@ -64,7 +64,7 @@ h3 {
 }
 
 .card {
-  background: linear-gradient(180deg, #ffffff, #f6f8fc);
+  background: linear-gradient(180deg, rgba(25, 33, 54, 0.9), rgba(12, 17, 32, 0.9));
   border-radius: 18px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
@@ -106,36 +106,36 @@ h3 {
 }
 
 .pill--ghost {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .pill--active {
-  background: rgba(45, 78, 215, 0.12);
-  color: #1c2d64;
-  border: 1px solid rgba(45, 78, 215, 0.4);
+  background: rgba(55, 93, 251, 0.12);
+  color: #dce6ff;
+  border: 1px solid rgba(55, 93, 251, 0.35);
 }
 
 .btn {
-  border: 1px solid rgba(45, 78, 215, 0.35);
-  background: linear-gradient(135deg, #3b5bf4, #2d4ed7);
-  color: #f8faff;
+  border: 1px solid rgba(55, 93, 251, 0.45);
+  background: linear-gradient(135deg, #3c64ff, #2747d8);
+  color: #f5f8ff;
   padding: 10px 14px;
   border-radius: 12px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 12px 24px rgba(45, 78, 215, 0.32);
+  box-shadow: 0 12px 28px rgba(55, 93, 251, 0.35);
   transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
 }
 
 .btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(45, 78, 215, 0.42);
+  box-shadow: 0 14px 32px rgba(55, 93, 251, 0.45);
   filter: brightness(1.03);
 }
 
 .btn--ghost {
-  background: rgba(45, 78, 215, 0.12);
-  color: #1c2d64;
+  background: rgba(55, 93, 251, 0.14);
+  color: #dce6ff;
   box-shadow: none;
 }
 
@@ -144,7 +144,7 @@ h3 {
   border-radius: 10px;
   border: 1px solid var(--border);
   min-width: 220px;
-  background: #ffffff;
+  background: #0b1326;
   color: var(--text);
 }
 
@@ -180,11 +180,11 @@ h3 {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #ffffff;
+  background: #0d1527;
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 14px;
-  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.35);
   min-width: 240px;
 }
 
@@ -239,9 +239,9 @@ h3 {
 .details__panel {
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: #ffffff;
+  background: #0d1527;
   padding: 16px;
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.14);
 }
 
 .details__title {
@@ -255,12 +255,12 @@ h3 {
   height: 48px;
   border-radius: 12px;
   border: 2px solid var(--border);
-  background: #f2f5fb;
+  background: #0b1020;
   display: grid;
   place-items: center;
   font-size: 16px;
   font-weight: 700;
-  color: #1c2d64;
+  color: #e5e7ef;
 }
 
 .details__grid {
@@ -274,7 +274,7 @@ h3 {
   border: 1px dashed var(--border);
   border-radius: 8px;
   padding: 8px;
-  background: #f6f8fc;
+  background: #0f192d;
 }
 
 .details__actions {
@@ -288,7 +288,7 @@ h3 {
   border: 1px dashed var(--border);
   border-radius: 12px;
   color: var(--muted);
-  background: #f6f8fc;
+  background: #0f192d;
 }
 
 .muted {
@@ -312,9 +312,9 @@ h3 {
 .error-banner {
   display: flex;
   gap: 16px;
-  background: rgba(211, 63, 63, 0.1);
-  border: 1px solid rgba(211, 63, 63, 0.35);
-  color: #5f1d1d;
+  background: rgba(211, 63, 63, 0.08);
+  border: 1px solid rgba(211, 63, 63, 0.4);
+  color: #f3bbbb;
   padding: 12px 14px;
   border-radius: 12px;
   margin-bottom: 16px;
@@ -324,8 +324,8 @@ h3 {
 .error-banner__code {
   margin: 0;
   padding: 10px;
-  background: #fff3f3;
-  color: #5f1d1d;
+  background: #1a0f0f;
+  color: #f9d5d5;
   border-radius: 8px;
   overflow: auto;
   max-width: 420px;
