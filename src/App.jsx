@@ -24,127 +24,291 @@ const riskColor = (score) => {
   return '#1D9C73';
 };
 
-const syntheticData = {
-  nodes: [
-    {
-      id: 'evt_card_wave',
-      type: 'event',
-      label: 'Card Testing Wave',
-      risk_score: 92,
-      attributes: { status: 'Active', severity: 'High', region: 'UK' },
-      timestamp: '2024-05-02T09:00:00Z',
-      visual: { radius: 38 },
-    },
-    {
-      id: 'evt_invest_blast',
-      type: 'event',
-      label: 'Investment Lure Blast',
-      risk_score: 88,
-      attributes: { status: 'Active', severity: 'High', region: 'US' },
-      timestamp: '2024-05-05T14:00:00Z',
-      visual: { radius: 38 },
-    },
-    {
-      id: 'acct_alpha',
-      type: 'account',
-      label: 'Alpha Cashout',
-      risk_score: 76,
-      attributes: { platform: 'Instagram', handle: '@cash.alpha', age_days: 3 },
-      timestamp: '2024-05-02T08:45:00Z',
-    },
-    {
-      id: 'acct_bravo',
-      type: 'account',
-      label: 'Bravo Holdings',
-      risk_score: 72,
-      attributes: { platform: 'TikTok', handle: '@bravo.hld', age_days: 4 },
-      timestamp: '2024-05-05T12:25:00Z',
-    },
-    {
-      id: 'ip_shared',
-      type: 'ip',
-      label: '203.0.113.24',
-      risk_score: 84,
-      attributes: { geolocation: 'Amsterdam, NL', hosting: 'VPS - Exit Node' },
-      timestamp: '2024-05-05T13:40:00Z',
-      visual: { radius: 30 },
-    },
-    {
-      id: 'relay_edge',
-      type: 'other',
-      label: 'Proxy Relay',
-      risk_score: 64,
-      attributes: { provider: 'Unregistered ASN', role: 'Traffic Broker' },
-      timestamp: '2024-05-05T13:45:00Z',
-    },
-    {
-      id: 'wallet_sink',
-      type: 'other',
-      label: 'Payout Wallet',
-      risk_score: 71,
-      attributes: { currency: 'USDT', chain: 'Tron', total_in: 24000 },
-      timestamp: '2024-05-05T14:10:00Z',
-    },
-  ],
-  links: [
-    {
-      id: 'rel_evt_alpha',
-      source: 'evt_card_wave',
-      target: 'acct_alpha',
-      type: 'actor_account',
-      weight: 1,
-      timestamp: '2024-05-02T09:05:00Z',
-    },
-    {
-      id: 'rel_evt_bravo',
-      source: 'evt_invest_blast',
-      target: 'acct_bravo',
-      type: 'actor_account',
-      weight: 1,
-      timestamp: '2024-05-05T14:05:00Z',
-    },
-    {
-      id: 'rel_alpha_ip',
-      source: 'acct_alpha',
-      target: 'ip_shared',
-      type: 'login_from',
-      weight: 0.9,
-      timestamp: '2024-05-05T12:00:00Z',
-    },
-    {
-      id: 'rel_bravo_ip',
-      source: 'acct_bravo',
-      target: 'ip_shared',
-      type: 'login_from',
-      weight: 0.9,
-      timestamp: '2024-05-05T14:15:00Z',
-    },
-    {
-      id: 'rel_ip_proxy',
-      source: 'ip_shared',
-      target: 'relay_edge',
-      type: 'routes_to',
-      weight: 0.7,
-      timestamp: '2024-05-05T13:48:00Z',
-    },
-    {
-      id: 'rel_alpha_wallet',
-      source: 'acct_alpha',
-      target: 'wallet_sink',
-      type: 'payout',
-      weight: 0.6,
-      timestamp: '2024-05-05T14:20:00Z',
-    },
-    {
-      id: 'rel_bravo_wallet',
-      source: 'acct_bravo',
-      target: 'wallet_sink',
-      type: 'payout',
-      weight: 0.6,
-      timestamp: '2024-05-05T14:22:00Z',
-    },
-  ],
-};
+const syntheticScenarios = [
+  {
+    id: 'shared-ip-double-attack',
+    title: 'Double Attack via Shared IP',
+    nodes: [
+      {
+        id: 'evt_card_wave',
+        type: 'event',
+        label: 'Card Testing Wave',
+        risk_score: 92,
+        attributes: { status: 'Active', severity: 'High', region: 'UK' },
+        timestamp: '2024-05-02T09:00:00Z',
+        visual: { radius: 38 },
+      },
+      {
+        id: 'evt_invest_blast',
+        type: 'event',
+        label: 'Investment Lure Blast',
+        risk_score: 88,
+        attributes: { status: 'Active', severity: 'High', region: 'US' },
+        timestamp: '2024-05-05T14:00:00Z',
+        visual: { radius: 38 },
+      },
+      {
+        id: 'acct_alpha',
+        type: 'account',
+        label: 'Alpha Cashout',
+        risk_score: 76,
+        attributes: { platform: 'Instagram', handle: '@cash.alpha', age_days: 3 },
+        timestamp: '2024-05-02T08:45:00Z',
+      },
+      {
+        id: 'acct_bravo',
+        type: 'account',
+        label: 'Bravo Holdings',
+        risk_score: 72,
+        attributes: { platform: 'TikTok', handle: '@bravo.hld', age_days: 4 },
+        timestamp: '2024-05-05T12:25:00Z',
+      },
+      {
+        id: 'ip_shared',
+        type: 'ip',
+        label: '203.0.113.24',
+        risk_score: 84,
+        attributes: { geolocation: 'Amsterdam, NL', hosting: 'VPS - Exit Node' },
+        timestamp: '2024-05-05T13:40:00Z',
+        visual: { radius: 30 },
+      },
+      {
+        id: 'relay_edge',
+        type: 'other',
+        label: 'Proxy Relay',
+        risk_score: 64,
+        attributes: { provider: 'Unregistered ASN', role: 'Traffic Broker' },
+        timestamp: '2024-05-05T13:45:00Z',
+      },
+      {
+        id: 'wallet_sink',
+        type: 'other',
+        label: 'Payout Wallet',
+        risk_score: 71,
+        attributes: { currency: 'USDT', chain: 'Tron', total_in: 24000 },
+        timestamp: '2024-05-05T14:10:00Z',
+      },
+      {
+        id: 'device_alpha',
+        type: 'other',
+        label: 'Android Device',
+        risk_score: 58,
+        attributes: { fingerprint: 'a9:43:fe', trust: 'Low' },
+        timestamp: '2024-05-02T08:40:00Z',
+      },
+      {
+        id: 'device_bravo',
+        type: 'other',
+        label: 'iOS Device',
+        risk_score: 62,
+        attributes: { fingerprint: 'c3:11:ca', trust: 'Low' },
+        timestamp: '2024-05-05T12:10:00Z',
+      },
+      {
+        id: 'ip_exit',
+        type: 'ip',
+        label: '198.51.100.77',
+        risk_score: 69,
+        attributes: { geolocation: 'Frankfurt, DE', hosting: 'Residential proxy' },
+        timestamp: '2024-05-05T14:30:00Z',
+      },
+    ],
+    links: [
+      {
+        id: 'rel_evt_alpha',
+        source: 'evt_card_wave',
+        target: 'acct_alpha',
+        type: 'actor_account',
+        weight: 1,
+        timestamp: '2024-05-02T09:05:00Z',
+      },
+      {
+        id: 'rel_evt_bravo',
+        source: 'evt_invest_blast',
+        target: 'acct_bravo',
+        type: 'actor_account',
+        weight: 1,
+        timestamp: '2024-05-05T14:05:00Z',
+      },
+      {
+        id: 'rel_alpha_ip',
+        source: 'acct_alpha',
+        target: 'ip_shared',
+        type: 'login_from',
+        weight: 0.9,
+        timestamp: '2024-05-05T12:00:00Z',
+      },
+      {
+        id: 'rel_bravo_ip',
+        source: 'acct_bravo',
+        target: 'ip_shared',
+        type: 'login_from',
+        weight: 0.9,
+        timestamp: '2024-05-05T14:15:00Z',
+      },
+      {
+        id: 'rel_ip_proxy',
+        source: 'ip_shared',
+        target: 'relay_edge',
+        type: 'routes_to',
+        weight: 0.7,
+        timestamp: '2024-05-05T13:48:00Z',
+      },
+      {
+        id: 'rel_alpha_wallet',
+        source: 'acct_alpha',
+        target: 'wallet_sink',
+        type: 'payout',
+        weight: 0.6,
+        timestamp: '2024-05-05T14:20:00Z',
+      },
+      {
+        id: 'rel_bravo_wallet',
+        source: 'acct_bravo',
+        target: 'wallet_sink',
+        type: 'payout',
+        weight: 0.6,
+        timestamp: '2024-05-05T14:22:00Z',
+      },
+      {
+        id: 'rel_alpha_device',
+        source: 'acct_alpha',
+        target: 'device_alpha',
+        type: 'device',
+        weight: 0.5,
+        timestamp: '2024-05-02T08:50:00Z',
+      },
+      {
+        id: 'rel_bravo_device',
+        source: 'acct_bravo',
+        target: 'device_bravo',
+        type: 'device',
+        weight: 0.5,
+        timestamp: '2024-05-05T12:30:00Z',
+      },
+      {
+        id: 'rel_proxy_exit',
+        source: 'relay_edge',
+        target: 'ip_exit',
+        type: 'routes_to',
+        weight: 0.6,
+        timestamp: '2024-05-05T14:35:00Z',
+      },
+    ],
+  },
+  {
+    id: 'gift-card-raids',
+    title: 'Gift Card Raids via Rotating Exit',
+    nodes: [
+      { id: 'evt_gift_surge', type: 'event', label: 'Gift Card Surge', risk_score: 90, attributes: { region: 'CA', severity: 'High', status: 'Escalated' }, timestamp: '2024-04-18T11:00:00Z', visual: { radius: 36 } },
+      { id: 'evt_coupon_farm', type: 'event', label: 'Coupon Farming', risk_score: 83, attributes: { region: 'BR', severity: 'High', status: 'Active' }, timestamp: '2024-04-18T15:00:00Z', visual: { radius: 36 } },
+      { id: 'acct_delta', type: 'account', label: 'Delta Deals', risk_score: 70, attributes: { platform: 'Telegram', handle: '@deltadeals' }, timestamp: '2024-04-18T10:40:00Z' },
+      { id: 'acct_echo', type: 'account', label: 'Echo Rewards', risk_score: 68, attributes: { platform: 'Discord', handle: 'echo#8871' }, timestamp: '2024-04-18T14:40:00Z' },
+      { id: 'ip_gift_shared', type: 'ip', label: '198.18.0.23', risk_score: 82, attributes: { geolocation: 'Warsaw, PL', hosting: 'Compromised SOHO' }, timestamp: '2024-04-18T14:50:00Z', visual: { radius: 28 } },
+      { id: 'otp_service', type: 'other', label: 'OTP Intercept Service', risk_score: 77, attributes: { provider: 'Gray Vendor' }, timestamp: '2024-04-18T14:55:00Z' },
+      { id: 'gift_wallet', type: 'other', label: 'Gift Wallet', risk_score: 65, attributes: { currency: 'BTC', total_in: 5.2 }, timestamp: '2024-04-18T15:10:00Z' },
+      { id: 'device_delta', type: 'other', label: 'Windows VM', risk_score: 54, attributes: { fingerprint: 'vm-992a' }, timestamp: '2024-04-18T10:35:00Z' },
+      { id: 'device_echo', type: 'other', label: 'Android Tablet', risk_score: 55, attributes: { fingerprint: 'tab-b442' }, timestamp: '2024-04-18T14:35:00Z' },
+      { id: 'ip_rotator', type: 'ip', label: '203.0.113.190', risk_score: 60, attributes: { geolocation: 'Paris, FR', hosting: 'Residential pool' }, timestamp: '2024-04-18T15:20:00Z' },
+    ],
+    links: [
+      { id: 'rel_gift_delta', source: 'evt_gift_surge', target: 'acct_delta', type: 'actor_account', weight: 1, timestamp: '2024-04-18T11:05:00Z' },
+      { id: 'rel_coupon_echo', source: 'evt_coupon_farm', target: 'acct_echo', type: 'actor_account', weight: 1, timestamp: '2024-04-18T15:05:00Z' },
+      { id: 'rel_delta_ip', source: 'acct_delta', target: 'ip_gift_shared', type: 'login_from', weight: 0.9, timestamp: '2024-04-18T14:48:00Z' },
+      { id: 'rel_echo_ip', source: 'acct_echo', target: 'ip_gift_shared', type: 'login_from', weight: 0.9, timestamp: '2024-04-18T14:52:00Z' },
+      { id: 'rel_shared_otp', source: 'ip_gift_shared', target: 'otp_service', type: 'routes_to', weight: 0.6, timestamp: '2024-04-18T14:56:00Z' },
+      { id: 'rel_delta_wallet', source: 'acct_delta', target: 'gift_wallet', type: 'payout', weight: 0.6, timestamp: '2024-04-18T15:12:00Z' },
+      { id: 'rel_echo_wallet', source: 'acct_echo', target: 'gift_wallet', type: 'payout', weight: 0.6, timestamp: '2024-04-18T15:14:00Z' },
+      { id: 'rel_delta_device', source: 'acct_delta', target: 'device_delta', type: 'device', weight: 0.5, timestamp: '2024-04-18T10:42:00Z' },
+      { id: 'rel_echo_device', source: 'acct_echo', target: 'device_echo', type: 'device', weight: 0.5, timestamp: '2024-04-18T14:42:00Z' },
+      { id: 'rel_rotator', source: 'ip_gift_shared', target: 'ip_rotator', type: 'routes_to', weight: 0.5, timestamp: '2024-04-18T15:22:00Z' },
+    ],
+  },
+  {
+    id: 'crypto-drain-twins',
+    title: 'Crypto Drain Twins',
+    nodes: [
+      { id: 'evt_defi_drip', type: 'event', label: 'DeFi Drip Attack', risk_score: 91, attributes: { protocol: 'Lending', severity: 'High', status: 'Open' }, timestamp: '2024-03-11T06:00:00Z', visual: { radius: 36 } },
+      { id: 'evt_nft_rug', type: 'event', label: 'NFT Rug Pull', risk_score: 87, attributes: { collection: 'PixelPets', severity: 'High', status: 'Review' }, timestamp: '2024-03-11T08:30:00Z', visual: { radius: 36 } },
+      { id: 'acct_foxtrot', type: 'account', label: 'Foxtrot Labs', risk_score: 74, attributes: { platform: 'Twitter', handle: '@foxtrotlabs' }, timestamp: '2024-03-11T05:50:00Z' },
+      { id: 'acct_golf', type: 'account', label: 'Golf Node', risk_score: 73, attributes: { platform: 'GitHub', handle: 'golfnode' }, timestamp: '2024-03-11T08:00:00Z' },
+      { id: 'ip_chain_shared', type: 'ip', label: '10.22.33.44', risk_score: 85, attributes: { geolocation: 'Singapore', hosting: 'Cloud VM' }, timestamp: '2024-03-11T08:05:00Z', visual: { radius: 28 } },
+      { id: 'mix_service', type: 'other', label: 'Mixing Service', risk_score: 78, attributes: { provider: 'MixerX' }, timestamp: '2024-03-11T08:15:00Z' },
+      { id: 'bridge_contract', type: 'other', label: 'Bridge Contract', risk_score: 66, attributes: { chain: 'Polygon' }, timestamp: '2024-03-11T08:20:00Z' },
+      { id: 'wallet_hot', type: 'other', label: 'Hot Wallet', risk_score: 70, attributes: { currency: 'ETH', total_in: 67 }, timestamp: '2024-03-11T08:25:00Z' },
+      { id: 'device_foxtrot', type: 'other', label: 'Linux Host', risk_score: 52, attributes: { fingerprint: 'lnx-0101' }, timestamp: '2024-03-11T05:40:00Z' },
+      { id: 'device_golf', type: 'other', label: 'MacOS Host', risk_score: 55, attributes: { fingerprint: 'mac-7782' }, timestamp: '2024-03-11T07:55:00Z' },
+    ],
+    links: [
+      { id: 'rel_defi_foxtrot', source: 'evt_defi_drip', target: 'acct_foxtrot', type: 'actor_account', weight: 1, timestamp: '2024-03-11T06:05:00Z' },
+      { id: 'rel_nft_golf', source: 'evt_nft_rug', target: 'acct_golf', type: 'actor_account', weight: 1, timestamp: '2024-03-11T08:35:00Z' },
+      { id: 'rel_foxtrot_ip', source: 'acct_foxtrot', target: 'ip_chain_shared', type: 'login_from', weight: 0.9, timestamp: '2024-03-11T08:04:00Z' },
+      { id: 'rel_golf_ip', source: 'acct_golf', target: 'ip_chain_shared', type: 'login_from', weight: 0.9, timestamp: '2024-03-11T08:06:00Z' },
+      { id: 'rel_ip_mixer', source: 'ip_chain_shared', target: 'mix_service', type: 'routes_to', weight: 0.7, timestamp: '2024-03-11T08:16:00Z' },
+      { id: 'rel_mixer_bridge', source: 'mix_service', target: 'bridge_contract', type: 'routes_to', weight: 0.6, timestamp: '2024-03-11T08:21:00Z' },
+      { id: 'rel_bridge_wallet', source: 'bridge_contract', target: 'wallet_hot', type: 'payout', weight: 0.6, timestamp: '2024-03-11T08:26:00Z' },
+      { id: 'rel_foxtrot_device', source: 'acct_foxtrot', target: 'device_foxtrot', type: 'device', weight: 0.5, timestamp: '2024-03-11T05:45:00Z' },
+      { id: 'rel_golf_device', source: 'acct_golf', target: 'device_golf', type: 'device', weight: 0.5, timestamp: '2024-03-11T07:58:00Z' },
+      { id: 'rel_wallet_ip', source: 'wallet_hot', target: 'ip_chain_shared', type: 'login_from', weight: 0.4, timestamp: '2024-03-11T08:27:00Z' },
+    ],
+  },
+  {
+    id: 'loan-fraud-pair',
+    title: 'Loan Fraud Pair',
+    nodes: [
+      { id: 'evt_mortgage_rush', type: 'event', label: 'Mortgage App Rush', risk_score: 86, attributes: { region: 'US', severity: 'Medium', status: 'Active' }, timestamp: '2024-02-20T09:00:00Z', visual: { radius: 34 } },
+      { id: 'evt_microloan_spree', type: 'event', label: 'Microloan Spree', risk_score: 82, attributes: { region: 'IN', severity: 'High', status: 'Active' }, timestamp: '2024-02-20T12:00:00Z', visual: { radius: 34 } },
+      { id: 'acct_hotel', type: 'account', label: 'Hotel Credit', risk_score: 71, attributes: { platform: 'Android App', handle: 'hotel_credit' }, timestamp: '2024-02-20T08:55:00Z' },
+      { id: 'acct_india', type: 'account', label: 'India Loans', risk_score: 69, attributes: { platform: 'Mobile Web', handle: 'india_loans' }, timestamp: '2024-02-20T11:45:00Z' },
+      { id: 'ip_loan_shared', type: 'ip', label: '172.20.10.9', risk_score: 83, attributes: { geolocation: 'Bangalore, IN', hosting: '4G Hotspot' }, timestamp: '2024-02-20T12:05:00Z', visual: { radius: 28 } },
+      { id: 'kyc_passport', type: 'other', label: 'Passport Template', risk_score: 75, attributes: { country: 'UK' }, timestamp: '2024-02-20T12:10:00Z' },
+      { id: 'kyc_bill', type: 'other', label: 'Utility Bill', risk_score: 72, attributes: { country: 'IN' }, timestamp: '2024-02-20T12:12:00Z' },
+      { id: 'device_hotspot', type: 'other', label: 'Android Hotspot', risk_score: 60, attributes: { fingerprint: 'and-3321' }, timestamp: '2024-02-20T08:50:00Z' },
+      { id: 'device_router', type: 'other', label: 'Home Router', risk_score: 58, attributes: { fingerprint: 'rtr-5121' }, timestamp: '2024-02-20T11:35:00Z' },
+      { id: 'ip_proxy_loan', type: 'ip', label: '203.0.113.77', risk_score: 63, attributes: { geolocation: 'London, UK', hosting: 'Residential Proxy' }, timestamp: '2024-02-20T12:20:00Z' },
+    ],
+    links: [
+      { id: 'rel_rush_hotel', source: 'evt_mortgage_rush', target: 'acct_hotel', type: 'actor_account', weight: 1, timestamp: '2024-02-20T09:05:00Z' },
+      { id: 'rel_spree_india', source: 'evt_microloan_spree', target: 'acct_india', type: 'actor_account', weight: 1, timestamp: '2024-02-20T12:05:00Z' },
+      { id: 'rel_hotel_ip', source: 'acct_hotel', target: 'ip_loan_shared', type: 'login_from', weight: 0.9, timestamp: '2024-02-20T12:04:00Z' },
+      { id: 'rel_india_ip', source: 'acct_india', target: 'ip_loan_shared', type: 'login_from', weight: 0.9, timestamp: '2024-02-20T12:06:00Z' },
+      { id: 'rel_ip_passport', source: 'ip_loan_shared', target: 'kyc_passport', type: 'uploads', weight: 0.6, timestamp: '2024-02-20T12:11:00Z' },
+      { id: 'rel_ip_bill', source: 'ip_loan_shared', target: 'kyc_bill', type: 'uploads', weight: 0.6, timestamp: '2024-02-20T12:13:00Z' },
+      { id: 'rel_hotel_device', source: 'acct_hotel', target: 'device_hotspot', type: 'device', weight: 0.5, timestamp: '2024-02-20T08:58:00Z' },
+      { id: 'rel_india_device', source: 'acct_india', target: 'device_router', type: 'device', weight: 0.5, timestamp: '2024-02-20T11:40:00Z' },
+      { id: 'rel_proxy_chain', source: 'ip_loan_shared', target: 'ip_proxy_loan', type: 'routes_to', weight: 0.5, timestamp: '2024-02-20T12:22:00Z' },
+      { id: 'rel_bill_passport', source: 'kyc_bill', target: 'kyc_passport', type: 'templates', weight: 0.4, timestamp: '2024-02-20T12:14:00Z' },
+    ],
+  },
+  {
+    id: 'travel-scam-network',
+    title: 'Travel Scam Network',
+    nodes: [
+      { id: 'evt_ticket_rush', type: 'event', label: 'Ticketing Rush', risk_score: 88, attributes: { region: 'EU', severity: 'High', status: 'Investigating' }, timestamp: '2024-01-08T07:00:00Z', visual: { radius: 34 } },
+      { id: 'evt_airfare_bait', type: 'event', label: 'Airfare Bait', risk_score: 85, attributes: { region: 'US', severity: 'Medium', status: 'Active' }, timestamp: '2024-01-08T10:30:00Z', visual: { radius: 34 } },
+      { id: 'acct_juliet', type: 'account', label: 'Juliet Trips', risk_score: 73, attributes: { platform: 'Facebook', handle: 'juliet_trips' }, timestamp: '2024-01-08T06:50:00Z' },
+      { id: 'acct_kilo', type: 'account', label: 'Kilo Flyers', risk_score: 71, attributes: { platform: 'Instagram', handle: '@kilofly' }, timestamp: '2024-01-08T10:10:00Z' },
+      { id: 'ip_travel_shared', type: 'ip', label: '192.0.2.99', risk_score: 84, attributes: { geolocation: 'Madrid, ES', hosting: 'VPN Gateway' }, timestamp: '2024-01-08T10:20:00Z', visual: { radius: 28 } },
+      { id: 'payment_hub', type: 'other', label: 'Payment Hub', risk_score: 70, attributes: { processor: 'Stripe clone' }, timestamp: '2024-01-08T10:25:00Z' },
+      { id: 'crm_dump', type: 'other', label: 'CRM Dump', risk_score: 69, attributes: { records: 12000 }, timestamp: '2024-01-08T10:26:00Z' },
+      { id: 'device_juliet', type: 'other', label: 'iPad Retail', risk_score: 53, attributes: { fingerprint: 'ipad-001' }, timestamp: '2024-01-08T06:45:00Z' },
+      { id: 'device_kilo', type: 'other', label: 'Windows Laptop', risk_score: 56, attributes: { fingerprint: 'win-009' }, timestamp: '2024-01-08T10:05:00Z' },
+      { id: 'ip_exit_travel', type: 'ip', label: '203.0.113.45', risk_score: 62, attributes: { geolocation: 'Lisbon, PT', hosting: 'Residential proxy' }, timestamp: '2024-01-08T10:40:00Z' },
+    ],
+    links: [
+      { id: 'rel_ticket_juliet', source: 'evt_ticket_rush', target: 'acct_juliet', type: 'actor_account', weight: 1, timestamp: '2024-01-08T07:05:00Z' },
+      { id: 'rel_airfare_kilo', source: 'evt_airfare_bait', target: 'acct_kilo', type: 'actor_account', weight: 1, timestamp: '2024-01-08T10:35:00Z' },
+      { id: 'rel_juliet_ip', source: 'acct_juliet', target: 'ip_travel_shared', type: 'login_from', weight: 0.9, timestamp: '2024-01-08T10:22:00Z' },
+      { id: 'rel_kilo_ip', source: 'acct_kilo', target: 'ip_travel_shared', type: 'login_from', weight: 0.9, timestamp: '2024-01-08T10:23:00Z' },
+      { id: 'rel_ip_payment', source: 'ip_travel_shared', target: 'payment_hub', type: 'routes_to', weight: 0.6, timestamp: '2024-01-08T10:27:00Z' },
+      { id: 'rel_payment_crm', source: 'payment_hub', target: 'crm_dump', type: 'routes_to', weight: 0.6, timestamp: '2024-01-08T10:28:00Z' },
+      { id: 'rel_juliet_device', source: 'acct_juliet', target: 'device_juliet', type: 'device', weight: 0.5, timestamp: '2024-01-08T06:48:00Z' },
+      { id: 'rel_kilo_device', source: 'acct_kilo', target: 'device_kilo', type: 'device', weight: 0.5, timestamp: '2024-01-08T10:12:00Z' },
+      { id: 'rel_travel_exit', source: 'ip_travel_shared', target: 'ip_exit_travel', type: 'routes_to', weight: 0.5, timestamp: '2024-01-08T10:42:00Z' },
+      { id: 'rel_crm_exit', source: 'crm_dump', target: 'ip_exit_travel', type: 'exfil', weight: 0.4, timestamp: '2024-01-08T10:44:00Z' },
+    ],
+  },
+];
 
 const filtersInitialState = Object.keys(typeLabels).reduce((acc, key) => {
   acc[key] = true;
@@ -200,7 +364,23 @@ const validateSyntheticData = (data) => {
   }
 
   const adjacency = buildAdjacency(data.links);
-  const sharedIp = ipNodes.find((ip) => events.every((evt) => adjacency.get(evt.id)?.has(ip.id)));
+
+  const canReach = (start, target) => {
+    const seen = new Set();
+    const queue = [start];
+    while (queue.length) {
+      const current = queue.shift();
+      if (current === target) return true;
+      if (seen.has(current)) continue;
+      seen.add(current);
+      adjacency.get(current)?.forEach((neighbor) => {
+        if (!seen.has(neighbor)) queue.push(neighbor);
+      });
+    }
+    return false;
+  };
+
+  const sharedIp = ipNodes.find((ip) => events.every((evt) => canReach(evt.id, ip.id)));
 
   if (!sharedIp) {
     return {
@@ -219,38 +399,43 @@ const validateSyntheticData = (data) => {
 const resolveId = (endpoint) => (typeof endpoint === 'object' && endpoint !== null ? endpoint.id : endpoint);
 
 function App() {
-  const adjacency = useMemo(() => buildAdjacency(syntheticData.links), []);
+  const [scenarioId, setScenarioId] = useState(syntheticScenarios[0].id);
+  const activeScenario = useMemo(
+    () => syntheticScenarios.find((scenario) => scenario.id === scenarioId) || syntheticScenarios[0],
+    [scenarioId]
+  );
+
+  const adjacency = useMemo(() => buildAdjacency(activeScenario.links), [activeScenario]);
   const [activeFilters, setActiveFilters] = useState(filtersInitialState);
   const [selectedNode, setSelectedNode] = useState(null);
   const [hoverNode, setHoverNode] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [dimensions, setDimensions] = useState({ width: 960, height: 440 });
-  const [visibleNodes, setVisibleNodes] = useState(() =>
-    new Set(syntheticData.nodes.filter((n) => n.type === 'event').map((n) => n.id))
-  );
+  const [visibleNodes, setVisibleNodes] = useState(() => new Set(activeScenario.nodes.map((n) => n.id)));
 
   const timestamps = useMemo(() => {
-    const fromNodes = syntheticData.nodes.map((n) => Date.parse(n.timestamp)).filter(Number.isFinite);
-    const fromLinks = syntheticData.links.map((l) => Date.parse(l.timestamp)).filter(Number.isFinite);
+    const fromNodes = activeScenario.nodes.map((n) => Date.parse(n.timestamp)).filter(Number.isFinite);
+    const fromLinks = activeScenario.links.map((l) => Date.parse(l.timestamp)).filter(Number.isFinite);
     const times = [...fromNodes, ...fromLinks];
     return times;
-  }, []);
+  }, [activeScenario]);
 
-  const [timelineValue, setTimelineValue] = useState(() => Math.min(...timestamps));
+  const [timelineValue, setTimelineValue] = useState(() => (timestamps.length ? Math.min(...timestamps) : Date.now()));
   const fgRef = useRef();
   const containerRef = useRef();
 
   const timeBounds = useMemo(() => {
+    if (!timestamps.length) return { min: Date.now(), max: Date.now() };
     return {
       min: Math.min(...timestamps),
       max: Math.max(...timestamps),
     };
   }, [timestamps]);
 
-  const dataError = useMemo(() => validateSyntheticData(syntheticData), []);
+  const dataError = useMemo(() => validateSyntheticData(activeScenario), [activeScenario]);
 
   const resetView = () => {
-    setVisibleNodes(new Set(syntheticData.nodes.filter((n) => n.type === 'event').map((n) => n.id)));
+    setVisibleNodes(new Set(activeScenario.nodes.map((n) => n.id)));
     setSelectedNode(null);
     setHoverNode(null);
     setTimelineValue(timeBounds.min);
@@ -294,6 +479,21 @@ function App() {
   }, []);
 
   useEffect(() => {
+    setVisibleNodes(new Set(activeScenario.nodes.map((n) => n.id)));
+    setSelectedNode(null);
+    setHoverNode(null);
+    setTimelineValue(timestamps.length ? Math.min(...timestamps) : Date.now());
+
+    const fg = fgRef.current;
+    if (fg) {
+      const linkForce = fg.d3Force('link');
+      linkForce?.distance((link) => (link.type === 'actor_account' ? 180 : 140));
+      const charge = fg.d3Force('charge');
+      charge?.strength(-360);
+    }
+  }, [activeScenario, timestamps]);
+
+  useEffect(() => {
     const updateSize = () => {
       const rect = containerRef.current?.getBoundingClientRect();
       if (rect) setDimensions({ width: rect.width, height: rect.height });
@@ -310,7 +510,11 @@ function App() {
   const handleNodeClick = (node) => {
     setSelectedNode(node);
     const scope = revealConnectedComponent(node.id);
-    setVisibleNodes(scope);
+    setVisibleNodes((prev) => {
+      const expanded = new Set(activeScenario.nodes.map((n) => n.id));
+      scope.forEach((id) => expanded.add(id));
+      return expanded;
+    });
   };
 
   const handleNodeDoubleClick = (node) => {
@@ -325,22 +529,22 @@ function App() {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return new Set();
     return new Set(
-      syntheticData.nodes
+      activeScenario.nodes
         .filter((n) => n.label.toLowerCase().includes(term) || n.id.toLowerCase().includes(term))
         .map((n) => n.id)
     );
-  }, [searchTerm]);
+  }, [searchTerm, activeScenario]);
 
   const visibleData = useMemo(() => {
     const nodes = sortNodesByTypeAndTime(
-      syntheticData.nodes.filter((n) => visibleNodes.has(n.id) && activeFilters[n.type])
+      activeScenario.nodes.filter((n) => visibleNodes.has(n.id) && activeFilters[n.type])
     );
     const allowedIds = new Set(nodes.map((n) => n.id));
-    const links = syntheticData.links.filter(
+    const links = activeScenario.links.filter(
       (link) => allowedIds.has(resolveId(link.source)) && allowedIds.has(resolveId(link.target))
     );
     return { nodes, links };
-  }, [visibleNodes, activeFilters]);
+  }, [visibleNodes, activeFilters, activeScenario]);
 
   const activeFocus = useMemo(() => {
     if (hoverNode) return revealDirectNeighbors(hoverNode.id);
@@ -468,16 +672,29 @@ function App() {
 
       <div className="card">
         <div className="card__controls">
-          <div className="filters">
-            {Object.entries(typeLabels).map(([type, label]) => (
-              <button
-                key={type}
-                className={`pill ${activeFilters[type] ? 'pill--active' : 'pill--ghost'}`}
-                onClick={() => toggleFilter(type)}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="controls__left">
+            <div className="scenario-select">
+              <label htmlFor="scenario">Scenario</label>
+              <select id="scenario" value={scenarioId} onChange={(e) => setScenarioId(e.target.value)}>
+                {syntheticScenarios.map((scenario) => (
+                  <option key={scenario.id} value={scenario.id}>
+                    {scenario.title}
+                  </option>
+                ))}
+              </select>
+              <p className="muted">All incidents are shown; shared infra is highlighted on focus.</p>
+            </div>
+            <div className="filters">
+              {Object.entries(typeLabels).map(([type, label]) => (
+                <button
+                  key={type}
+                  className={`pill ${activeFilters[type] ? 'pill--active' : 'pill--ghost'}`}
+                  onClick={() => toggleFilter(type)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="controls__right">
             <div className="search">
