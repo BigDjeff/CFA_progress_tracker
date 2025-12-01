@@ -16,7 +16,19 @@ const typeLabels = {
   other: 'Other',
 };
 
+const typePalette = {
+  event: { fill: '#FFF4F4', ring: '#FCDADA', glyph: '#D33F3F' },
+  ip: { fill: '#F3F8FF', ring: '#C8DBFD', glyph: '#1C3FAA' },
+  account: { fill: '#F3FFFB', ring: '#B9F4E1', glyph: '#0F9D58' },
+  other: { fill: '#FFF9EE', ring: '#F6D9A7', glyph: '#C56A00' },
+};
+
 const typeOrder = ['event', 'ip', 'account', 'other'];
+
+const parseTimestamp = (value) => {
+  const ts = Date.parse(value || '');
+  return Number.isFinite(ts) ? ts : null;
+};
 
 const riskColor = (score) => {
   if (score >= 80) return '#D33F3F';
@@ -346,6 +358,15 @@ const sortNodesByTypeAndTime = (nodes) => {
   });
 };
 
+const withAlpha = (hex, alpha) => {
+  const sanitized = hex.replace('#', '');
+  const bigint = parseInt(sanitized, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 const validateSyntheticData = (data) => {
   const events = data.nodes.filter((n) => n.type === 'event');
   if (events.length < 2) {
@@ -406,6 +427,28 @@ function App() {
   );
 
   const adjacency = useMemo(() => buildAdjacency(activeScenario.links), [activeScenario]);
+  const degreeMap = useMemo(() => {
+    const counts = new Map();
+    activeScenario.links.forEach((link) => {
+      const src = resolveId(link.source);
+      const tgt = resolveId(link.target);
+      counts.set(src, (counts.get(src) || 0) + 1);
+      counts.set(tgt, (counts.get(tgt) || 0) + 1);
+    });
+    return counts;
+  }, [activeScenario]);
+
+  const nodeImportance = useMemo(() => {
+    const importance = new Map();
+    activeScenario.nodes.forEach((node) => {
+      const connectivity = degreeMap.get(node.id) || 0;
+      const risk = node.risk_score ?? 0;
+      const baseRadius = node.visual?.radius || 18;
+      const sizeBoost = (risk / 100) * 12 + Math.min(connectivity * 2.4, 18);
+      importance.set(node.id, baseRadius + sizeBoost);
+    });
+    return importance;
+  }, [activeScenario, degreeMap]);
   const [activeFilters, setActiveFilters] = useState(filtersInitialState);
   const [selectedNode, setSelectedNode] = useState(null);
   const [hoverNode, setHoverNode] = useState(null);
@@ -431,6 +474,56 @@ function App() {
       max: Math.max(...timestamps),
     };
   }, [timestamps]);
+
+  const timelineProgression = useMemo(() => {
+    const nodeTimes = new Map();
+    activeScenario.nodes.forEach((node) => nodeTimes.set(node.id, parseTimestamp(node.timestamp)));
+
+    const earliestIpTime = Math.min(
+      ...activeScenario.nodes.filter((n) => n.type === 'ip').map((n) => parseTimestamp(n.timestamp) || Infinity),
+      Infinity
+    );
+    const earliestNodes = activeScenario.nodes.filter((n) => (n.type === 'ip' ? parseTimestamp(n.timestamp) === earliestIpTime : false));
+    const globalEarliest = Math.min(...timestamps, Infinity);
+    const fallbackOrigins = activeScenario.nodes.filter((n) => parseTimestamp(n.timestamp) === globalEarliest);
+    const origins = (earliestNodes.length ? earliestNodes : fallbackOrigins).map((n) => n.id);
+    const seedOrigins = origins.length ? origins : activeScenario.nodes.slice(0, 1).map((n) => n.id);
+
+    const linksByNode = new Map();
+    activeScenario.links.forEach((link) => {
+      const src = resolveId(link.source);
+      const tgt = resolveId(link.target);
+      const linkTime = parseTimestamp(link.timestamp);
+      const push = (nodeId, neighbor) => {
+        if (!linksByNode.has(nodeId)) linksByNode.set(nodeId, []);
+        linksByNode.get(nodeId).push({ id: link.id, neighbor, time: linkTime });
+      };
+      push(src, tgt);
+      push(tgt, src);
+    });
+
+    const reachableNodes = new Set(seedOrigins);
+    const reachableLinks = new Set();
+    const queue = [...seedOrigins];
+
+    while (queue.length) {
+      const current = queue.shift();
+      linksByNode.get(current)?.forEach(({ id, neighbor, time }) => {
+        const withinTime = time === null || time <= timelineValue;
+        const neighborTime = nodeTimes.get(neighbor);
+        const neighborVisible = neighborTime === null || neighborTime <= timelineValue;
+        if (withinTime && neighborVisible) {
+          reachableLinks.add(id);
+          if (!reachableNodes.has(neighbor)) {
+            reachableNodes.add(neighbor);
+            queue.push(neighbor);
+          }
+        }
+      });
+    }
+
+    return { origins: new Set(seedOrigins), nodes: reachableNodes, links: reachableLinks };
+  }, [activeScenario, timelineValue, timestamps]);
 
   const dataError = useMemo(() => validateSyntheticData(activeScenario), [activeScenario]);
 
@@ -553,42 +646,63 @@ function App() {
   }, [hoverNode, selectedNode, revealConnectedComponent, revealDirectNeighbors]);
 
   const nodeCanvasObject = (node, ctx, globalScale) => {
+    const palette = typePalette[node.type] || { fill: '#F8FAFD', ring: '#C3CAD8', glyph: '#1B1D21' };
+    const importanceRadius = nodeImportance.get(node.id) || node.visual?.radius || 18;
+    const radius = importanceRadius / Math.sqrt(globalScale);
+    const label = node.label;
+
+    let alpha = 1;
+    const inTimeline = timelineProgression.nodes.has(node.id);
+    if (!inTimeline) alpha *= 0.1;
+
+    const time = parseTimestamp(node.timestamp);
+    if (time !== null && time > timelineValue) alpha *= 0.16;
+
     if (filteredHighlight.size && !filteredHighlight.has(node.id)) {
-      ctx.globalAlpha = 0.2;
+      alpha *= 0.35;
     }
 
     if (activeFocus && !activeFocus.has(node.id)) {
-      ctx.globalAlpha *= 0.35;
+      alpha *= 0.25;
     }
 
-    const radius = (node.visual?.radius || 18) / Math.sqrt(globalScale);
-    const stroke = node.id === selectedNode?.id ? '#2D4ED7' : '#C3CAD8';
-    const baseFill = '#F8FAFD';
-    const label = node.label;
+    ctx.save();
+    ctx.globalAlpha = alpha;
 
-    const time = Date.parse(node.timestamp || '');
-    const faded = Number.isFinite(time) && time < timelineValue;
-    if (faded) ctx.globalAlpha *= 0.55;
-
+    const ringWidth = node.id === selectedNode?.id ? 4 : 2;
     ctx.beginPath();
+    if (node.type === 'ip') {
+      ctx.setLineDash([5, 4]);
+    } else if (node.type === 'event') {
+      ctx.setLineDash([2, 2]);
+    }
+    ctx.lineWidth = ringWidth;
+    ctx.strokeStyle = palette.ring;
+    ctx.fillStyle = palette.fill;
     ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
-    ctx.fillStyle = baseFill;
     ctx.fill();
-    ctx.lineWidth = node.id === selectedNode?.id ? 4 : 2;
-    ctx.strokeStyle = stroke;
     ctx.stroke();
+    ctx.setLineDash([]);
 
-    ctx.fillStyle = riskColor(node.risk_score || 0);
+    if (timelineProgression.origins.has(node.id)) {
+      ctx.beginPath();
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = withAlpha('#2D4ED7', 0.35);
+      ctx.arc(node.x, node.y, radius + 6, 0, 2 * Math.PI, false);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = palette.glyph;
     ctx.font = `${10 / Math.sqrt(globalScale)}px "Inter", system-ui`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(typeGlyphs[node.type] || 'ID', node.x, node.y - radius - 10);
 
-    ctx.fillStyle = '#1B1D21';
+    ctx.fillStyle = '#0F172A';
     ctx.font = `${12 / Math.sqrt(globalScale)}px "Inter", system-ui`;
     ctx.fillText(label, node.x, node.y);
 
-    ctx.globalAlpha = 1;
+    ctx.restore();
   };
 
   const isEdgeHighlighted = (link) => {
@@ -603,13 +717,15 @@ function App() {
 
   const linkColor = (link) => {
     const emphasized = isEdgeHighlighted(link);
-    const recent = Number.isFinite(Date.parse(link.timestamp)) && Date.parse(link.timestamp) >= timelineValue;
-    if (emphasized) return '#375DFB';
-    if (recent) return '#9AAAF5';
-    return '#CDD5E4';
+    const inTimeline = timelineProgression.links.has(link.id);
+    const recent = Number.isFinite(Date.parse(link.timestamp)) && Date.parse(link.timestamp) <= timelineValue;
+    if (!inTimeline) return withAlpha('#9AAAF5', 0.12);
+    if (emphasized) return withAlpha('#375DFB', 0.95);
+    return withAlpha('#375DFB', recent ? 0.45 : 0.25);
   };
 
   const linkWidth = (link) => {
+    if (!timelineProgression.links.has(link.id)) return 0.7;
     if (isEdgeHighlighted(link)) return 2.8;
     return link.weight >= 0.9 ? 2.1 : 1.4;
   };
